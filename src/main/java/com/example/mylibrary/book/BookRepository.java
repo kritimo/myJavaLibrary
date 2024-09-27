@@ -1,57 +1,79 @@
 package com.example.mylibrary.book;
 
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.util.Assert;
+
 
 @Repository
 public class BookRepository {
 
-    private List<Book> books = new ArrayList<>();
+    private static final Logger log = LoggerFactory.getLogger(BookRepository.class);
+    private final JdbcClient jdbcClient;
 
-    List<Book> findAll(){
-        return books;
+    public BookRepository(JdbcClient jdbcClient){
+        this.jdbcClient = jdbcClient;
     }
 
-    Optional<Book> findByTitle(String title){
-        return books.stream()
-                .filter(book -> book.getTitle().equals(title))
-                .findFirst();
+    public List<Book> findAll(){
+        return jdbcClient.sql("select * from book")
+                .query(Book.class)
+                .list();
     }
 
-    void create(Book book){
-        books.add(book);
+    public Optional<Book> findByTitle(String title){
+        return jdbcClient.sql("SELECT title, author, genre, date_finished, status, review, rating FROM Book WHERE title = :title" )
+                .param("title", title)
+                .query(Book.class)
+                .optional();
     }
 
-    void update(Book book, String title){
-        Optional<Book> existingBook = findByTitle(title);
-        if(existingBook.isPresent()){
-            books.set(books.indexOf(existingBook.get()), book);
-        }
+    public void create(Book book) {
+        var updated = jdbcClient.sql("INSERT INTO Book(title, author, genre, date_finished, status, review, rating) values(?,?,?,?,?,?,?)")
+                .params(List.of(book.getTitle(),book.getAuthor(),book.getGenre(),book.getDateFinished(),book.getStatus(),book.getReview(), book.getRating().toString()))
+                .update();
+
+        Assert.state(updated == 1, "Failed to create book " + book.getTitle());
     }
 
-    void delete(String title){
-        books.removeIf(book -> book.getTitle().equals(title));
+    public void update(Book book, String title) {
+        var updated = jdbcClient.sql("update book set author = ?, genre = ?, date_finished = ?, status = ?, review = ?, rating = ? where title = ?")
+                .params(List.of(book.getAuthor(),book.getGenre(),book.getDateFinished(),book.getStatus(),book.getReview(), book.getRating().toString(), title))
+                .update();
+
+        Assert.state(updated == 1, "Failed to update book " + title);
     }
 
-    @PostConstruct
-    private void init(){
-        books.add(new Book("Pride and Prejudice",
-                "Jane Austen", Genre.Fiction,
-                LocalDate.now(), ReadStatus.WantToRead,
-                "Great book", 5));
-        books.add(new Book("To Kill a Mockingbird", "Harper Lee", Genre.HistoricalFiction,
-                LocalDate.now(), ReadStatus.Read,
-                "Thought provoking", 4));
-        books.add(new Book("MacBeth", "Shakespeare", Genre.HistoricalFiction,
-                LocalDate.now(), ReadStatus.Read,
-                "Great play", 5));
+    public void delete(String title) {
+        var updated = jdbcClient.sql("delete from book where title = :title")
+                .param("title", title)
+                .update();
+
+        Assert.state(updated == 1, "Failed to delete run " + title);
     }
 
+    public int count() {
+        return jdbcClient.sql("select * from book").query().listOfRows().size();
+    }
+
+    public void saveAll(List<Book> books) {
+        books.stream().forEach(this::create);
+    }
+
+    public List<Book> findByAuthor(String author) {
+        return jdbcClient.sql("select * from book where author = :author")
+                .param("author", author)
+                .query(Book.class)
+                .list();
+    }
 
 
 

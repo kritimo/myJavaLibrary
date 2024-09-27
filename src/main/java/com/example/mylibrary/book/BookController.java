@@ -23,36 +23,36 @@ public class BookController {
     List<Book> findAll(){
         return bookRepository.findAll();
     }
-
-    @GetMapping("/{title}")
-    Book findByTitle(@PathVariable String title){
-        Optional<Book> book = bookRepository.findByTitle(title);
-        if (book.isEmpty()){
-            throw new BookNotFoundException();
-        }
-
-        return book.get();
-    }
-
-    //post
-    @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("")
-    void create(@RequestBody Book book){
-        bookRepository.create(book);
-    }
-
-    //put
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PutMapping("/{title}")
-    void update(@RequestBody Book book, @PathVariable String title){
-        bookRepository.update(book, title);
-    }
-
-    //delete
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("/{title}")
-    void delete(@PathVariable String title){
-        bookRepository.delete(title);
-    }
+//
+//    @GetMapping("/{title}")
+//    Book findByTitle(@PathVariable String title){
+//        Optional<Book> book = bookRepository.findByTitle(title);
+//        if (book.isEmpty()){
+//            throw new BookNotFoundException();
+//        }
+//
+//        return book.get();
+//    }
+//
+//    //post
+//    @ResponseStatus(HttpStatus.CREATED)
+//    @PostMapping("")
+//    void create(@RequestBody Book book){
+//        bookRepository.create(book);
+//    }
+//
+//    //put
+//    @ResponseStatus(HttpStatus.NO_CONTENT)
+//    @PutMapping("/{title}")
+//    void update(@RequestBody Book book, @PathVariable String title){
+//        bookRepository.update(book, title);
+//    }
+//
+//    //delete
+//    @ResponseStatus(HttpStatus.NO_CONTENT)
+//    @DeleteMapping("/{title}")
+//    void delete(@PathVariable String title){
+//        bookRepository.delete(title);
+//    }
 
 }
